@@ -59,7 +59,7 @@ public class ParseCommandLine {
                     if (i + 1 > line.length) {
                         throw new RuntimeException("Missing parameter for " + s);
                     }
-                    StringConverter.FromStringConverter converter = StringConverter.createConverter(field);
+                    StringConverter.FromStringConverter converter = StringConverter.createConverter(field, null);
                     converter.convert(instantiate, line[i+1]);
                     i++;
                 }
