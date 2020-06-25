@@ -56,7 +56,7 @@ public class ParseCommandLine {
                 if (field.getDataType() == DataType.Boolean) {
                     instantiate.setValue(field, Boolean.TRUE);
                 } else {
-                    if (i + 1 > line.length) {
+                    if (i + 1 >= line.length) {
                         throw new RuntimeException("Missing parameter for " + s);
                     }
                     StringConverter.FromStringConverter converter = StringConverter.createConverter(field, null);
