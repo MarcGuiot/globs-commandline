@@ -46,7 +46,7 @@ public class ParseCommandLineTest {
         public static IntegerField VAL;
 
         static {
-            GlobTypeLoaderFactory.create(Opt1.class).load();
+            GlobTypeLoaderFactory.create(Opt1.class, true).load();
         }
     }
 }
