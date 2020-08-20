@@ -12,6 +12,7 @@ import org.globsframework.utils.Strings;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 
 public class ParseCommandLineTest {
@@ -34,6 +35,26 @@ public class ParseCommandLineTest {
         Assert.assertEquals("1,2", String.join(",", strings));
     }
 
+    @Test
+    public void multipleOptions() {
+        ArrayList<String> args = new ArrayList<>(Arrays.asList("--name", "a name", "--otherName", "titi"));
+        Glob opt = ParseCommandLine.parse(Opt1.TYPE, args, true);
+        Assert.assertEquals(opt.get(Opt1.NAME), "a name");
+        Glob opt2 = ParseCommandLine.parse(Opt2.TYPE, args, false);
+        Assert.assertEquals(opt2.get(Opt2.otherName), "titi");
+    }
+
+    @Test
+    public void withUnknownParam() {
+        ArrayList<String> args = new ArrayList<>(Arrays.asList("--name", "a name", "--otherName", "titi"));
+        try {
+            Glob opt = ParseCommandLine.parse(Opt1.TYPE, args, false);
+            Assert.fail("not ignored");
+        } catch (Exception exception) {
+            Assert.assertTrue(exception instanceof ParseError);
+        }
+    }
+
     public static class Opt1 {
         public static GlobType TYPE;
 
@@ -47,6 +68,16 @@ public class ParseCommandLineTest {
 
         static {
             GlobTypeLoaderFactory.create(Opt1.class, true).load();
+        }
+    }
+
+    public static class Opt2 {
+        public static GlobType TYPE;
+
+        public static StringField otherName;
+
+        static {
+            GlobTypeLoaderFactory.create(Opt2.class, true).load();
         }
     }
 }

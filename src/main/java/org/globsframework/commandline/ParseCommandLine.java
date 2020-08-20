@@ -12,6 +12,8 @@ import org.globsframework.model.MutableGlob;
 import org.globsframework.utils.StringConverter;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 
 public class ParseCommandLine {
@@ -41,33 +43,41 @@ public class ParseCommandLine {
         return args.toArray(new String[0]);
     }
 
-
     public static Glob parse(GlobType type, String[] line) {
+        return parse(type, new ArrayList<>(Arrays.asList(line)), false);
+    }
+
+    public static Glob parse(GlobType type, List<String> line, boolean ignoreUnknown) {
         MutableGlob instantiate = type.instantiate();
         Field[] fields = type.getFields();
         for (Field field : fields) {
             instantiate.setValue(field, field.getDefaultValue());
         }
-        for (int i = 0; i < line.length; i++) {
-            String s = line[i];
+        for (Iterator<String> iterator = line.iterator(); iterator.hasNext(); ) {
+            String s = iterator.next();
             if (s.startsWith("--")) {
-                String name = s.substring(2, s.length());
-                Field field = type.getField(name);
-                if (field.getDataType() == DataType.Boolean) {
-                    instantiate.setValue(field, Boolean.TRUE);
-                } else {
-                    if (i + 1 >= line.length) {
-                        throw new RuntimeException("Missing parameter for " + s);
+                String name = s.substring(2);
+                Field field = type.findField(name);
+                if (field != null) {
+                    iterator.remove();
+                    if (field.getDataType() == DataType.Boolean) {
+                        instantiate.setValue(field, Boolean.TRUE);
+                    } else {
+                        if (!iterator.hasNext()) {
+                            throw new ParseError("Missing parameter for " + s);
+                        }
+                        StringConverter.FromStringConverter converter = StringConverter.createConverter(field, null);
+                        converter.convert(instantiate, iterator.next());
+                        iterator.remove();
                     }
-                    StringConverter.FromStringConverter converter = StringConverter.createConverter(field, null);
-                    converter.convert(instantiate, line[i+1]);
-                    i++;
+                } else if (!ignoreUnknown) {
+                    throw new ParseError("Unknown parameter " + name);
                 }
             }
         }
         for (Field field : type.getFields()) {
             if (!instantiate.isSet(field) && field.hasAnnotation(Mandatory.KEY)) {
-                throw new RuntimeException("Missing argument " + field);
+                throw new ParseError("Missing argument " + field);
             }
         }
         return instantiate;
