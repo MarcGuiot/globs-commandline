@@ -55,12 +55,32 @@ public class ParseCommandLineTest {
         }
     }
 
+    @Test
+    public void WithMultiValueInArray() {
+        ArrayList<String> args = new ArrayList<>(Arrays.asList("--value", "toto", "titi", "--value", "A,B,C","--name", "a name"));
+        Glob opt = ParseCommandLine.parse(Opt1.TYPE, args, false);
+        Assert.assertEquals(opt.get(Opt1.NAME), "a name");
+        Assert.assertArrayEquals(new String[]{"toto", "titi", "A", "B", "C"}, opt.get(Opt1.MULTIVALUES));
+    }
+
+    @Test
+    public void WithMultiValueInArrayWithMultiOpt() {
+        ArrayList<String> args = new ArrayList<>(Arrays.asList("--value", "toto", "titi", "--otherName", "tata", "--value", "A,B,C","--name", "a name"));
+        Glob opt = ParseCommandLine.parse(Opt1.TYPE, args, true);
+        Assert.assertEquals(opt.get(Opt1.NAME), "a name");
+        Assert.assertArrayEquals(new String[]{"toto", "titi", "A", "B", "C"}, opt.get(Opt1.MULTIVALUES));
+        Glob opt2 = ParseCommandLine.parse(Opt2.TYPE, args, true);
+        Assert.assertEquals(opt2.get(Opt2.otherName), "tata");
+    }
+
+
     public static class Opt1 {
         public static GlobType TYPE;
 
         public static StringField NAME;
 
         @FieldNameAnnotation("value")
+        @ArraySeparator_(',')
         public static StringArrayField MULTIVALUES;
 
         @DefaultInteger(123)

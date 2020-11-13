@@ -10,6 +10,8 @@ import org.globsframework.metamodel.type.DataType;
 import org.globsframework.model.Glob;
 import org.globsframework.model.MutableGlob;
 import org.globsframework.utils.StringConverter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -17,6 +19,7 @@ import java.util.Iterator;
 import java.util.List;
 
 public class ParseCommandLine {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ParseCommandLine.class);
 
     public static String[] toArgs(Glob glob) {
         List<String> args = new ArrayList<>();
@@ -33,10 +36,8 @@ public class ParseCommandLine {
                     args.add(glob.get((IntegerField) field).toString());
                 } else if (field instanceof StringArrayField) {
                     String[] values = glob.getOrEmpty((StringArrayField) field);
-                    for (String value : values) {
-                        args.add("--" + field.getName());
-                        args.add(value);
-                    }
+                    args.add("--" + field.getName());
+                    args.addAll(Arrays.asList(values));
                 }
             }
         }
@@ -48,25 +49,28 @@ public class ParseCommandLine {
     }
 
     public static Glob parse(GlobType type, List<String> line, boolean ignoreUnknown) {
+        LOGGER.info("parse: " + line);
         MutableGlob instantiate = type.instantiate();
         Field[] fields = type.getFields();
         for (Field field : fields) {
             instantiate.setValue(field, field.getDefaultValue());
         }
+        Field lastField = null;
         for (Iterator<String> iterator = line.iterator(); iterator.hasNext(); ) {
             String s = iterator.next();
             if (s.startsWith("--")) {
                 String name = s.substring(2);
-                Field field = type.findField(name);
-                if (field != null) {
+                lastField = type.findField(name);
+                if (lastField != null) {
                     iterator.remove();
-                    if (field.getDataType() == DataType.Boolean) {
-                        instantiate.setValue(field, Boolean.TRUE);
+                    if (lastField.getDataType() == DataType.Boolean) {
+                        instantiate.setValue(lastField, Boolean.TRUE);
                     } else {
                         if (!iterator.hasNext()) {
                             throw new ParseError("Missing parameter for " + s);
                         }
-                        StringConverter.FromStringConverter converter = StringConverter.createConverter(field, null);
+                        StringConverter.FromStringConverter converter = StringConverter.createConverter(lastField,
+                                lastField.findOptAnnotation(ArraySeparator.KEY).map(glob -> glob.get(ArraySeparator.SEPARATOR)).orElse(null));
                         converter.convert(instantiate, iterator.next());
                         iterator.remove();
                     }
@@ -74,12 +78,23 @@ public class ParseCommandLine {
                     throw new ParseError("Unknown parameter " + name);
                 }
             }
+            else if (lastField != null && lastField.getDataType().isArray()) {
+                StringConverter.FromStringConverter converter = StringConverter.createConverter(lastField,
+                        lastField.findOptAnnotation(ArraySeparator.KEY).map(glob -> glob.get(ArraySeparator.SEPARATOR)).orElse(null));
+                converter.convert(instantiate, s);
+                iterator.remove();
+            } else if (!ignoreUnknown) {
+                throw new ParseError("Unknown parameter " + s);
+            } else {
+                lastField = null;
+            }
         }
         for (Field field : type.getFields()) {
             if (!instantiate.isSet(field) && field.hasAnnotation(Mandatory.KEY)) {
                 throw new ParseError("Missing argument " + field);
             }
         }
+        LOGGER.info("Return : " + instantiate.toString());
         return instantiate;
     }
 }
