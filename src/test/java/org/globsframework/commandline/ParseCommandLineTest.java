@@ -8,8 +8,8 @@ import org.globsframework.metamodel.fields.IntegerField;
 import org.globsframework.metamodel.fields.StringArrayField;
 import org.globsframework.metamodel.fields.StringField;
 import org.globsframework.model.Glob;
-import org.globsframework.utils.Strings;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -33,6 +33,17 @@ public class ParseCommandLineTest {
         String[] strings = opt.getOrEmpty(Opt1.MULTIVALUES);
         Assert.assertEquals(2, strings.length);
         Assert.assertEquals("1,2", String.join(",", strings));
+    }
+
+    @Test
+    @Ignore
+    public void checkMandatoryAreChecked() {
+        ArrayList<String> args = new ArrayList<>();
+        try {
+            Glob opt = ParseCommandLine.parse(OptWithMandatory.TYPE, args, true);
+            Assert.fail("mandatory not checked");
+        } catch (ParseError parseError) {
+        }
     }
 
     @Test
@@ -98,6 +109,17 @@ public class ParseCommandLineTest {
 
         static {
             GlobTypeLoaderFactory.create(Opt2.class, true).load();
+        }
+    }
+
+    public static class OptWithMandatory {
+        public static GlobType TYPE;
+
+        @Mandatory_
+        public static StringField otherName;
+
+        static {
+            GlobTypeLoaderFactory.create(OptWithMandatory.class, true).load();
         }
     }
 }
