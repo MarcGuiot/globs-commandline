@@ -4,14 +4,14 @@ import org.globsframework.metamodel.GlobType;
 import org.globsframework.metamodel.GlobTypeLoaderFactory;
 import org.globsframework.metamodel.annotations.DefaultInteger;
 import org.globsframework.metamodel.annotations.FieldNameAnnotation;
-import org.globsframework.metamodel.fields.IntegerField;
-import org.globsframework.metamodel.fields.StringArrayField;
-import org.globsframework.metamodel.fields.StringField;
+import org.globsframework.metamodel.fields.*;
 import org.globsframework.model.Glob;
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -68,15 +68,15 @@ public class ParseCommandLineTest {
 
     @Test
     public void WithMultiValueInArray() {
-        ArrayList<String> args = new ArrayList<>(Arrays.asList("--value", "toto", "titi", "--value", "A,B,C","--name", "a name"));
+        ArrayList<String> args = new ArrayList<>(Arrays.asList("--value", "toto:ddd", "titi", "--value", "A,B,C", "--name", "a name"));
         Glob opt = ParseCommandLine.parse(Opt1.TYPE, args, false);
         Assert.assertEquals(opt.get(Opt1.NAME), "a name");
-        Assert.assertArrayEquals(new String[]{"toto", "titi", "A", "B", "C"}, opt.get(Opt1.MULTIVALUES));
+        Assert.assertArrayEquals(new String[]{"toto:ddd", "titi", "A", "B", "C"}, opt.get(Opt1.MULTIVALUES));
     }
 
     @Test
     public void WithMultiValueInArrayWithMultiOpt() {
-        ArrayList<String> args = new ArrayList<>(Arrays.asList("--value", "toto", "titi", "--otherName", "tata", "--value", "A,B,C","--name", "a name"));
+        ArrayList<String> args = new ArrayList<>(Arrays.asList("--value", "toto", "titi", "--otherName", "tata", "--value", "A,B,C", "--name", "a name"));
         Glob opt = ParseCommandLine.parse(Opt1.TYPE, args, true);
         Assert.assertEquals(opt.get(Opt1.NAME), "a name");
         Assert.assertArrayEquals(new String[]{"toto", "titi", "A", "B", "C"}, opt.get(Opt1.MULTIVALUES));
@@ -84,6 +84,17 @@ public class ParseCommandLineTest {
         Assert.assertEquals(opt2.get(Opt2.otherName), "tata");
     }
 
+
+    @Test
+    @Ignore
+    public void testWithDate() {
+        Glob opt1 = ParseCommandLine.parse(ArgWithDate.TYPE, new String[]{"--dateTime", "2021-02-10T00:00:00+00"});
+        Assert.assertEquals(opt1.get(ArgWithDate.dateTime), ZonedDateTime.parse("2021-02-10T00:00:00+00"));
+
+        Glob opt2 = ParseCommandLine.parse(ArgWithDate.TYPE, new String[]{"--dateTime", "2021-02-10"});
+        Assert.assertEquals(opt2.get(ArgWithDate.dateTime), ZonedDateTime.parse("2021-02-10", DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+
+    }
 
     public static class Opt1 {
         public static GlobType TYPE;
@@ -120,6 +131,18 @@ public class ParseCommandLineTest {
 
         static {
             GlobTypeLoaderFactory.create(OptWithMandatory.class, true).load();
+        }
+    }
+
+    public static class ArgWithDate {
+        public static GlobType TYPE;
+
+        public static DateTimeField dateTime;
+
+        public static DateField date;
+
+        static {
+            GlobTypeLoaderFactory.create(ArgWithDate.class).load();
         }
     }
 }
