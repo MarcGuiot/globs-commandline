@@ -55,7 +55,9 @@ public class ParseCommandLine {
         MutableGlob instantiate = type.instantiate();
         Field[] fields = type.getFields();
         for (Field field : fields) {
-            instantiate.setValue(field, field.getDefaultValue());
+            if (field.getDefaultValue() != null) {
+                instantiate.setValue(field, field.getDefaultValue());
+            }
         }
         Field lastField = null;
         for (Iterator<String> iterator = line.iterator(); iterator.hasNext(); ) {
