@@ -7,11 +7,21 @@
   <version>3.0</version>
 
   <repositories>
-    <repository>
-      <id>Maven2</id>
-      <url>http://download.java.net/maven/2/</url>
-    </repository>
+        <repository>
+            <id>gitlab-maven</id>
+            <url>${CI_API_V4_URL}/groups/12606202/-/packages/maven</url>
+        </repository>
   </repositories>
+  <distributionManagement>
+      <repository>
+          <id>gitlab-maven</id>
+          <url>${CI_API_V4_URL}/projects/${env.CI_PROJECT_ID}/packages/maven</url>
+      </repository>
+      <snapshotRepository>
+          <id>gitlab-maven</id>
+          <url>${CI_API_V4_URL}/projects/${env.CI_PROJECT_ID}/packages/maven</url>
+      </snapshotRepository>
+  </distributionManagement>
 
   <build>
     <plugins>
