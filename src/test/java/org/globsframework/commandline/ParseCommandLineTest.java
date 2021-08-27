@@ -36,7 +36,6 @@ public class ParseCommandLineTest {
     }
 
     @Test
-    @Ignore
     public void checkMandatoryAreChecked() {
         ArrayList<String> args = new ArrayList<>();
         try {
@@ -145,4 +144,5 @@ public class ParseCommandLineTest {
             GlobTypeLoaderFactory.create(ArgWithDate.class).load();
         }
     }
+
 }
