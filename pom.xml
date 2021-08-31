@@ -4,7 +4,7 @@
   <packaging>jar</packaging>
   <artifactId>globs-commandline</artifactId>
   <name>Generic Lightweight ObjectS command line</name>
-  <version>3.0</version>
+  <version>3.1</version>
 
   <repositories>
     <repository>
@@ -65,12 +65,12 @@
     <dependency>
       <groupId>org.globsframework</groupId>
       <artifactId>globs</artifactId>
-      <version>3.0</version>
+      <version>3.1</version>
     </dependency>
     <dependency>
       <groupId>org.globsframework</groupId>
       <artifactId>globs-generate</artifactId>
-      <version>3.0</version>
+      <version>3.1</version>
     </dependency>
     <dependency>
       <groupId>junit</groupId>
