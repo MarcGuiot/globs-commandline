@@ -2,6 +2,7 @@ package org.globsframework.commandline;
 
 import org.globsframework.metamodel.GlobType;
 import org.globsframework.metamodel.GlobTypeLoaderFactory;
+import org.globsframework.metamodel.annotations.DefaultString;
 import org.globsframework.metamodel.fields.StringField;
 import org.globsframework.model.Glob;
 import org.junit.Assert;
@@ -31,6 +32,25 @@ public class ParseEnvironmentTest {
         Assert.assertEquals("another name", opt.get(OptMulti.ANOTHER_NAME));
     }
 
+    @Test
+    public void testForDefaultValues() throws Exception{
+        Map<String, String> env = new HashMap<>();
+        env.put("PREFIX_OPTDEFAULT_NAME", "a name");
+
+        Glob opt = ParseEnvironment.parse("PREFIX", OptDefault.TYPE, env);
+        Assert.assertEquals("a name", opt.get(OptDefault.NAME) );
+        Assert.assertEquals("Marc", opt.get(OptDefault.ANOTHER_NAME));
+    }
+
+    @Test(expected = EnvironmentVariableNotSetException.class)
+    public void multipleOptionsExceptionTest() throws Exception{
+        Map<String, String> env = new HashMap<>();
+        env.put("PREFIX_OPTMULTI_ANOTHER_NAME", "another name");
+
+        Glob opt = ParseEnvironment.parse("PREFIX", OptMulti.TYPE, env);
+
+    }
+
     public static class Opt1 {
         public static GlobType TYPE;
 
@@ -44,11 +64,24 @@ public class ParseEnvironmentTest {
     public static class OptMulti {
         public static GlobType TYPE;
 
+        @Mandatory_
         public static StringField NAME;
         public static StringField ANOTHER_NAME;
 
         static {
             GlobTypeLoaderFactory.create(OptMulti.class, true).load();
+        }
+    }
+
+    public static class OptDefault {
+        public static GlobType TYPE;
+
+        public static StringField NAME;
+        @DefaultString("Marc")
+        public static StringField ANOTHER_NAME;
+
+        static {
+            GlobTypeLoaderFactory.create(OptDefault.class, true).load();
         }
     }
 

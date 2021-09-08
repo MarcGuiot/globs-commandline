@@ -19,12 +19,28 @@ public class ParseEnvironment {
         MutableGlob instantiate = type.instantiate();
         Field[] fields = type.getFields();
         for (Field field : fields){
-            String envVar = prefix.toUpperCase(Locale.ROOT)+ "_" + type.getName().toUpperCase(Locale.ROOT) + "_" + camelToSnake(field.getName()).toUpperCase(Locale.ROOT);
+            String envVar = convertToEnvVar(prefix, type, field);
             String val = envVars.get(envVar);
-            if(val == null) throw new EnvironmentVariableNotSetException("Required environment Variable is not set:" + envVar);
-            instantiate.setValue(field, val);
+            if(val != null) {
+                instantiate.setValue(field, val);
+            }
+            if(!instantiate.isSet(field) && field.getDefaultValue() != null){
+                instantiate.setValue(field, field.getDefaultValue());
+            }
+
         }
+
+        for (Field field : type.getFields()) {
+            if (!instantiate.isSet(field) && field.hasAnnotation(Mandatory.KEY)) {
+                throw new EnvironmentVariableNotSetException("Required environment Variable is not set:" + convertToEnvVar(prefix, type, field));
+            }
+        }
+
         return instantiate;
+    }
+
+    private static String convertToEnvVar(String prefix, GlobType type, Field field) {
+        return prefix.toUpperCase(Locale.ROOT)+ "_" + type.getName().toUpperCase(Locale.ROOT) + "_" + camelToSnake(field.getName()).toUpperCase(Locale.ROOT);
     }
 
     private static String camelToSnake(String str) {
