@@ -14,7 +14,7 @@ public class ParseEnvironment {
         return parse(prefix, type, System.getenv());
     }
 
-    public static Glob parse(String prefix, GlobType type, Map<String, String> envVars) throws EnvironmentVariableNotSetException {
+    protected static Glob parse(String prefix, GlobType type, Map<String, String> envVars) throws EnvironmentVariableNotSetException {
 
         MutableGlob instantiate = type.instantiate();
         Field[] fields = type.getFields();
