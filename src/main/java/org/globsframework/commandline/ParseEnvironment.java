@@ -30,13 +30,17 @@ public class ParseEnvironment {
 
         }
 
+        checkThatMandatoryFieldsAreFilled(type, instantiate, prefix);
+
+        return instantiate;
+    }
+
+    private static void checkThatMandatoryFieldsAreFilled(GlobType type, MutableGlob instantiate, String prefix) throws EnvironmentVariableNotSetException {
         for (Field field : type.getFields()) {
             if (!instantiate.isSet(field) && field.hasAnnotation(Mandatory.KEY)) {
                 throw new EnvironmentVariableNotSetException("Required environment Variable is not set:" + convertToEnvVar(prefix, type, field));
             }
         }
-
-        return instantiate;
     }
 
     private static String convertToEnvVar(String prefix, GlobType type, Field field) {
