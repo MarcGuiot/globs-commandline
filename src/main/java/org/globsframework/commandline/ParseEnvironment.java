@@ -4,11 +4,16 @@ import org.globsframework.metamodel.Field;
 import org.globsframework.metamodel.GlobType;
 import org.globsframework.model.Glob;
 import org.globsframework.model.MutableGlob;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Locale;
 import java.util.Map;
 
 public class ParseEnvironment {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(ParseEnvironment.class);
+
 
     public static Glob parseEnv(String prefix, GlobType type) throws EnvironmentVariableNotSetException {
         return parse(prefix, type, System.getenv());
@@ -23,9 +28,11 @@ public class ParseEnvironment {
             String val = envVars.get(envVar);
             if(val != null) {
                 instantiate.setValue(field, val);
+                LOGGER.info("Environment value " + val + " from envvar : "+ envVar + " applied to " + field.getFullName());
             }
-            if(!instantiate.isSet(field) && field.getDefaultValue() != null){
+            if(fieldsHasNoValueAndHasADefaultValue(instantiate, field)){
                 instantiate.setValue(field, field.getDefaultValue());
+                LOGGER.info("EnvVar not found (" + envVar +") but Default value " + field.getDefaultValue() + " applied to " + field.getFullName());
             }
 
         }
@@ -33,6 +40,10 @@ public class ParseEnvironment {
         checkThatMandatoryFieldsAreFilled(type, instantiate, prefix);
 
         return instantiate;
+    }
+
+    private static boolean fieldsHasNoValueAndHasADefaultValue(MutableGlob instantiate, Field field) {
+        return !instantiate.isSet(field) && field.getDefaultValue() != null;
     }
 
     private static void checkThatMandatoryFieldsAreFilled(GlobType type, MutableGlob instantiate, String prefix) throws EnvironmentVariableNotSetException {
