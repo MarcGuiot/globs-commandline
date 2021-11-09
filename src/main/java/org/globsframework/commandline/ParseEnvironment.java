@@ -4,6 +4,7 @@ import org.globsframework.metamodel.Field;
 import org.globsframework.metamodel.GlobType;
 import org.globsframework.model.Glob;
 import org.globsframework.model.MutableGlob;
+import org.globsframework.utils.StringConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,7 +28,9 @@ public class ParseEnvironment {
             String envVar = convertToEnvVar(prefix, type, field);
             String val = envVars.get(envVar);
             if(val != null) {
-                instantiate.setValue(field, val);
+                StringConverter.FromStringConverter converter = StringConverter.createConverter(field,
+                        field.findOptAnnotation(ArraySeparator.KEY).map(glob -> glob.get(ArraySeparator.SEPARATOR)).orElse(","));
+                converter.convert(instantiate, val);
                 LOGGER.info("Environment value " + val + " from envvar : "+ envVar + " applied to " + field.getFullName());
             }
             if(fieldsHasNoValueAndHasADefaultValue(instantiate, field)){

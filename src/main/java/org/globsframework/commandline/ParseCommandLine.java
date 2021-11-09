@@ -61,16 +61,16 @@ public class ParseCommandLine {
 
         Field lastField = null;
         for (Iterator<String> iterator = line.iterator(); iterator.hasNext(); ) {
-            String s = iterator.next();
-            if (s.startsWith("--")) {
-                String name = s.substring(2);
+            String param = iterator.next();
+            if (param.startsWith("--")) {
+                String name = param.substring(2);
                 lastField = type.findField(name);
                 if (lastField != null) {
                     iterator.remove();
                     if (ParseUtils.fieldIsABoolean(lastField)) {
                         instantiate.setValue(lastField, Boolean.TRUE);
                     } else {
-                        assignValueToField(lastField, iterator, instantiate,s);
+                        assignValueToField(lastField, iterator, instantiate,param);
                     }
                 } else if (!ignoreUnknown) {
                     throw new ParseError("Unknown parameter " + name);
@@ -79,10 +79,10 @@ public class ParseCommandLine {
             else if (ParseUtils.fieldIsAnArray(lastField)) {
                 StringConverter.FromStringConverter converter = StringConverter.createConverter(lastField,
                         lastField.findOptAnnotation(ArraySeparator.KEY).map(glob -> glob.get(ArraySeparator.SEPARATOR)).orElse(","));
-                converter.convert(instantiate, s);
+                converter.convert(instantiate, param);
                 iterator.remove();
             } else if (!ignoreUnknown) {
-                throw new ParseError("Unknown parameter " + s);
+                throw new ParseError("Unknown parameter " + param);
             } else {
                 lastField = null;
             }
