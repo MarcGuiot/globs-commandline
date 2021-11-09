@@ -3,6 +3,7 @@ package org.globsframework.commandline;
 import org.globsframework.metamodel.GlobType;
 import org.globsframework.metamodel.GlobTypeLoaderFactory;
 import org.globsframework.metamodel.annotations.DefaultString;
+import org.globsframework.metamodel.fields.IntegerField;
 import org.globsframework.metamodel.fields.StringField;
 import org.globsframework.model.Glob;
 import org.junit.Assert;
@@ -40,6 +41,16 @@ public class ParseEnvironmentTest {
         Glob opt = ParseEnvironment.parse("PREFIX", OptDefault.TYPE, env);
         Assert.assertEquals("a name", opt.get(OptDefault.NAME) );
         Assert.assertEquals("Marc", opt.get(OptDefault.ANOTHER_NAME));
+    }
+
+    @Test
+    public void testWithIntValues() throws Exception{
+        Map<String, String> env = new HashMap<>();
+        env.put("PREFIX_OPTWITHINTS_NAME", "a name");
+        env.put("PREFIX_OPTWITHINTS_INT_FIELD", "42");
+
+        Glob opt = ParseEnvironment.parse("PREFIX", OptWithInts.TYPE, env);
+        Assert.assertEquals(42, opt.get(OptWithInts.INT_FIELD).intValue());
     }
 
     @Test(expected = EnvironmentVariableNotSetException.class)
@@ -82,6 +93,17 @@ public class ParseEnvironmentTest {
 
         static {
             GlobTypeLoaderFactory.create(OptDefault.class, true).load();
+        }
+    }
+
+    public static class OptWithInts {
+        public static GlobType TYPE;
+
+        public static StringField NAME;
+        public static IntegerField INT_FIELD;
+
+        static {
+            GlobTypeLoaderFactory.create(OptWithInts.class, true).load();
         }
     }
 

@@ -3,7 +3,6 @@ package org.globsframework.commandline;
 import org.globsframework.metamodel.Field;
 import org.globsframework.metamodel.GlobType;
 import org.globsframework.metamodel.fields.*;
-import org.globsframework.metamodel.type.DataType;
 import org.globsframework.model.Glob;
 import org.globsframework.model.MutableGlob;
 import org.globsframework.utils.StringConverter;
@@ -16,6 +15,9 @@ import java.util.Iterator;
 import java.util.List;
 
 public class ParseCommandLine {
+
+    private ParseCommandLine() {}
+
     private static final Logger LOGGER = LoggerFactory.getLogger(ParseCommandLine.class);
 
     public static String[] toArgs(Glob glob) {
@@ -54,11 +56,9 @@ public class ParseCommandLine {
         LOGGER.info("parse: " + line);
         MutableGlob instantiate = type.instantiate();
         Field[] fields = type.getFields();
-        for (Field field : fields) {
-            if (field.getDefaultValue() != null) {
-                instantiate.setValue(field, field.getDefaultValue());
-            }
-        }
+
+        setDefaultValues(fields, instantiate);
+
         Field lastField = null;
         for (Iterator<String> iterator = line.iterator(); iterator.hasNext(); ) {
             String s = iterator.next();
@@ -67,22 +67,16 @@ public class ParseCommandLine {
                 lastField = type.findField(name);
                 if (lastField != null) {
                     iterator.remove();
-                    if (lastField.getDataType() == DataType.Boolean) {
+                    if (ParseUtils.fieldIsABoolean(lastField)) {
                         instantiate.setValue(lastField, Boolean.TRUE);
                     } else {
-                        if (!iterator.hasNext()) {
-                            throw new ParseError("Missing parameter for " + s);
-                        }
-                        StringConverter.FromStringConverter converter = StringConverter.createConverter(lastField,
-                                lastField.findOptAnnotation(ArraySeparator.KEY).map(glob -> glob.get(ArraySeparator.SEPARATOR)).orElse(","));
-                        converter.convert(instantiate, iterator.next());
-                        iterator.remove();
+                        assignValueToField(lastField, iterator, instantiate,s);
                     }
                 } else if (!ignoreUnknown) {
                     throw new ParseError("Unknown parameter " + name);
                 }
             }
-            else if (lastField != null && lastField.getDataType().isArray()) {
+            else if (ParseUtils.fieldIsAnArray(lastField)) {
                 StringConverter.FromStringConverter converter = StringConverter.createConverter(lastField,
                         lastField.findOptAnnotation(ArraySeparator.KEY).map(glob -> glob.get(ArraySeparator.SEPARATOR)).orElse(","));
                 converter.convert(instantiate, s);
@@ -93,14 +87,36 @@ public class ParseCommandLine {
                 lastField = null;
             }
         }
+
+        checkMandatoryFields(type, instantiate);
+        LOGGER.info("Return : " + instantiate.toString());
+        return instantiate;
+    }
+
+    private static void checkMandatoryFields(GlobType type, MutableGlob instantiate) {
         for (Field field : type.getFields()) {
             if (!instantiate.isSet(field) && field.hasAnnotation(Mandatory.KEY)) {
                 throw new ParseError("Missing argument " + field);
             }
         }
-        LOGGER.info("Return : " + instantiate.toString());
-        return instantiate;
     }
 
-    //add void usage(GlobType type, Printer printer);
+    private static void assignValueToField(Field lastField, Iterator<String> iterator, MutableGlob instantiate, String s) {
+        if (!iterator.hasNext()) {
+            throw new ParseError("Missing parameter for " + s);
+        }
+        StringConverter.FromStringConverter converter = StringConverter.createConverter(lastField,
+                lastField.findOptAnnotation(ArraySeparator.KEY).map(glob -> glob.get(ArraySeparator.SEPARATOR)).orElse(","));
+        converter.convert(instantiate, iterator.next());
+        iterator.remove();
+    }
+
+    private static void setDefaultValues(Field[] fields, MutableGlob instantiate) {
+
+        for (Field field : fields) {
+            if (ParseUtils.fieldHasDefaultValue(field)) {
+                instantiate.setValue(field, field.getDefaultValue());
+            }
+        }
+    }
 }
