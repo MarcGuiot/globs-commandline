@@ -9,16 +9,14 @@ import org.globsframework.utils.StringConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 public class ParseCommandLine {
 
-    private ParseCommandLine() {}
-
     private static final Logger LOGGER = LoggerFactory.getLogger(ParseCommandLine.class);
+
+    private ParseCommandLine() {
+    }
 
     public static String[] toArgs(Glob glob) {
         List<String> args = new ArrayList<>();
@@ -39,8 +37,7 @@ public class ParseCommandLine {
                     args.addAll(Arrays.asList(values));
                 } else if (field instanceof BooleanField) {
                     args.add("--" + field.getName());
-                }
-                else {
+                } else {
                     throw new RuntimeException("for " + field.getDataType() + " not managed for " + field.getName());
                 }
             }
@@ -53,39 +50,83 @@ public class ParseCommandLine {
     }
 
     public static Glob parse(GlobType type, List<String> line, boolean ignoreUnknown) {
+        return parse(type, line, ignoreUnknown, false);
+    }
+
+    public static Glob parse(GlobType type, List<String> line, boolean ignoreUnknown, boolean stopAtFirstNotFound) {
         LOGGER.info("parse: " + line);
+        ArrayDeque<String> deque = new ArrayDeque<>(line);
+        ArrayDeque<String> ignored = new ArrayDeque<>();
+        MutableGlob glob = extract(type, ignoreUnknown, stopAtFirstNotFound, deque, ignored);
+        line.clear();
+        line.addAll(ignored);
+        line.addAll(deque);
+        return glob;
+    }
+
+    private static MutableGlob extract(GlobType type, boolean ignoreUnknown, boolean stopAtFirstNotFound, Deque<String> deque, Deque<String> ignored) {
         MutableGlob instantiate = type.instantiate();
         Field[] fields = type.getFields();
 
         setDefaultValues(fields, instantiate);
 
-        Field lastField = null;
-        for (Iterator<String> iterator = line.iterator(); iterator.hasNext(); ) {
-            String param = iterator.next();
-            if (param.startsWith("--")) {
-                String name = param.substring(2);
-                lastField = type.findField(name);
-                if (lastField != null) {
-                    iterator.remove();
-                    if (ParseUtils.fieldIsABoolean(lastField)) {
-                        instantiate.setValue(lastField, Boolean.TRUE);
-                    } else {
-                        assignValueToField(lastField, iterator, instantiate,param);
+        if (!deque.isEmpty()) {
+            int size;
+            Field lastField = null;
+            do {
+                size = deque.size();
+                String param = deque.peekFirst();
+                if (param.startsWith("--")) {
+                    String name = param.substring(2);
+                    lastField = type.findField(name);
+                    if (lastField != null) {
+                        deque.removeFirst();
+                        if (ParseUtils.fieldIsABoolean(lastField)) {
+                            instantiate.setValue(lastField, Boolean.TRUE);
+                        } else {
+                            assignValueToField(lastField, deque, instantiate, param);
+                        }
+                    } else if (stopAtFirstNotFound) {
+                        return instantiate;
+                    } else if (!ignoreUnknown) {
+                        throw new ParseError("Unknown parameter " + name);
                     }
-                } else if (!ignoreUnknown) {
-                    throw new ParseError("Unknown parameter " + name);
+                    else {
+                        ignored.addLast(deque.pollFirst());
+                    }
+                } else if (ParseUtils.fieldIsAnArray(lastField)) {
+                    StringConverter.FromStringConverter converter = StringConverter.createConverter(lastField,
+                            lastField.findOptAnnotation(ArraySeparator.KEY).map(glob -> glob.get(ArraySeparator.SEPARATOR)).orElse(","));
+                    converter.convert(instantiate, param);
+                    deque.removeFirst();
+                } else {
+                    Optional<GlobUnionField> optionalUnion = type.streamFields().filter(field -> field instanceof GlobUnionField)
+                            .map(field -> ((GlobUnionField) field))
+                            .findFirst();
+                    Optional<GlobType> tType = optionalUnion
+                            .stream()
+                            .flatMap(field -> field.getTargetTypes().stream())
+                            .filter(globType -> param.equals(globType.getName()))
+                            .peek(globType -> deque.removeFirst())
+                            .peek(globType -> instantiate.set(optionalUnion.get(),
+                                    extract(globType, true, true, deque, ignored)))
+                            .findFirst();
+
+                    if (optionalUnion.isEmpty() || tType.isEmpty()) {
+                        if (stopAtFirstNotFound) {
+                            break;
+                        }
+                        if (!ignoreUnknown) {
+                            throw new ParseError("Unknown parameter " + param);
+                        }
+                        else {
+                            ignored.addLast(deque.pollFirst());
+                        }
+                    } else {
+                        lastField = null;
+                    }
                 }
-            }
-            else if (ParseUtils.fieldIsAnArray(lastField)) {
-                StringConverter.FromStringConverter converter = StringConverter.createConverter(lastField,
-                        lastField.findOptAnnotation(ArraySeparator.KEY).map(glob -> glob.get(ArraySeparator.SEPARATOR)).orElse(","));
-                converter.convert(instantiate, param);
-                iterator.remove();
-            } else if (!ignoreUnknown) {
-                throw new ParseError("Unknown parameter " + param);
-            } else {
-                lastField = null;
-            }
+            } while (deque.size() != 0 && size != deque.size());
         }
 
         checkMandatoryFields(type, instantiate);
@@ -101,14 +142,13 @@ public class ParseCommandLine {
         }
     }
 
-    private static void assignValueToField(Field lastField, Iterator<String> iterator, MutableGlob instantiate, String s) {
-        if (!iterator.hasNext()) {
+    private static void assignValueToField(Field lastField, Deque<String> deque, MutableGlob instantiate, String s) {
+        if (deque.isEmpty()) {
             throw new ParseError("Missing parameter for " + s);
         }
         StringConverter.FromStringConverter converter = StringConverter.createConverter(lastField,
-                lastField.findOptAnnotation(ArraySeparator.KEY).map(glob -> glob.get(ArraySeparator.SEPARATOR)).orElse(","));
-        converter.convert(instantiate, iterator.next());
-        iterator.remove();
+                lastField.findOptAnnotation(ArraySeparator.KEY).map(ArraySeparator.SEPARATOR).orElse(","));
+        converter.convert(instantiate, deque.pollFirst());
     }
 
     private static void setDefaultValues(Field[] fields, MutableGlob instantiate) {
