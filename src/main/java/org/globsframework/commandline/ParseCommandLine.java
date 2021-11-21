@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class ParseCommandLine {
 
@@ -68,6 +69,9 @@ public class ParseCommandLine {
         MutableGlob instantiate = type.instantiate();
         Field[] fields = type.getFields();
 
+        Deque<Field> withoutSpecifier = Arrays.stream(fields).filter(field -> field.hasAnnotation(UnNamed.KEY))
+                .collect(Collectors.toCollection(ArrayDeque::new));
+
         setDefaultValues(fields, instantiate);
 
         if (!deque.isEmpty()) {
@@ -94,12 +98,23 @@ public class ParseCommandLine {
                     else {
                         ignored.addLast(deque.pollFirst());
                     }
-                } else if (ParseUtils.fieldIsAnArray(lastField)) {
+                } else if (lastField != null && lastField.getDataType().isArray()) {
                     StringConverter.FromStringConverter converter = StringConverter.createConverter(lastField,
                             lastField.findOptAnnotation(ArraySeparator.KEY).map(glob -> glob.get(ArraySeparator.SEPARATOR)).orElse(","));
                     converter.convert(instantiate, param);
                     deque.removeFirst();
                 } else {
+                    if (lastField == null) {
+                        if (!withoutSpecifier.isEmpty()) {
+                            Field field = withoutSpecifier.removeFirst();
+                            assignValueToField(field, deque, instantiate, param);
+                            if (field instanceof StringArrayField) {
+                                lastField = field;
+                            }
+                            continue;
+                        }
+                    }
+
                     Optional<GlobUnionField> optionalUnion = type.streamFields().filter(field -> field instanceof GlobUnionField)
                             .map(field -> ((GlobUnionField) field))
                             .findFirst();
@@ -117,7 +132,7 @@ public class ParseCommandLine {
                             break;
                         }
                         if (!ignoreUnknown) {
-                            throw new ParseError("Unknown parameter " + param);
+                            throw new ParseError("Unknown parameter '" + param + "'");
                         }
                         else {
                             ignored.addLast(deque.pollFirst());

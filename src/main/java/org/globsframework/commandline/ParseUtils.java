@@ -15,8 +15,4 @@ public class ParseUtils {
         return field.getDataType() == DataType.Boolean;
     }
 
-    public static boolean fieldIsAnArray(Field field) {
-        return field != null && field.getDataType().isArray();
-    }
-
 }
