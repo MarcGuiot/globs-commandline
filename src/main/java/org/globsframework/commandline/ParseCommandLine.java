@@ -37,7 +37,9 @@ public class ParseCommandLine {
                     args.add("--" + field.getName());
                     args.addAll(Arrays.asList(values));
                 } else if (field instanceof BooleanField) {
-                    args.add("--" + field.getName());
+                    if (glob.isTrue((BooleanField) field)) {
+                        args.add("--" + field.getName());
+                    }
                 } else {
                     throw new RuntimeException("for " + field.getDataType() + " not managed for " + field.getName());
                 }
