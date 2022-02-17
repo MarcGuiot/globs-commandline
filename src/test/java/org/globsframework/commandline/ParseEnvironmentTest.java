@@ -4,6 +4,7 @@ import org.globsframework.metamodel.GlobType;
 import org.globsframework.metamodel.GlobTypeLoaderFactory;
 import org.globsframework.metamodel.annotations.DefaultString;
 import org.globsframework.metamodel.fields.IntegerField;
+import org.globsframework.metamodel.fields.StringArrayField;
 import org.globsframework.metamodel.fields.StringField;
 import org.globsframework.model.Glob;
 import org.junit.Assert;
@@ -62,6 +63,20 @@ public class ParseEnvironmentTest {
 
     }
 
+    @Test
+    public void arrayFieldTest() throws Exception{
+
+        Map<String, String> env = new HashMap<>();
+        env.put("PREFIX_OPTWITHSTRINGARRAY_ARRAY_FIELD", "another,name");
+
+        Glob opt = ParseEnvironment.parse("PREFIX", OptWithStringArray.TYPE, env);
+
+        Assert.assertEquals(2, opt.get(OptWithStringArray.arrayField).length);
+        Assert.assertEquals("another", opt.get(OptWithStringArray.arrayField)[0]);
+        Assert.assertEquals("name", opt.get(OptWithStringArray.arrayField)[1]);
+
+    }
+
     public static class Opt1 {
         public static GlobType TYPE;
 
@@ -104,6 +119,17 @@ public class ParseEnvironmentTest {
 
         static {
             GlobTypeLoaderFactory.create(OptWithInts.class, true).load();
+        }
+    }
+
+    public static class OptWithStringArray {
+        public static GlobType TYPE;
+
+        public static StringField NAME;
+        public static StringArrayField arrayField;
+
+        static {
+            GlobTypeLoaderFactory.create(OptWithStringArray.class, true).load();
         }
     }
 
