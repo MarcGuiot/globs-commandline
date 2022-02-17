@@ -36,13 +36,18 @@ public class ParseEnvironment {
             if(fieldsHasNoValueAndHasADefaultValue(instantiate, field)){
                 instantiate.setValue(field, field.getDefaultValue());
                 LOGGER.info("EnvVar not found (" + envVar +") but Default value " + field.getDefaultValue() + " applied to " + field.getFullName());
+            } else if(fieldsHasNoValue(instantiate, field)) {
+                LOGGER.info("EnvVar not set (" + envVar +")");
             }
-
         }
 
         checkThatMandatoryFieldsAreFilled(type, instantiate, prefix);
 
         return instantiate;
+    }
+
+    private static boolean fieldsHasNoValue(MutableGlob instantiate, Field field) {
+        return !instantiate.isSet(field);
     }
 
     private static boolean fieldsHasNoValueAndHasADefaultValue(MutableGlob instantiate, Field field) {
