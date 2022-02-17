@@ -63,7 +63,9 @@ public class ParseEnvironment {
     }
 
     private static String convertToEnvVar(String prefix, GlobType type, Field field) {
-        return prefix.toUpperCase(Locale.ROOT)+ "_" + type.getName().toUpperCase(Locale.ROOT) + "_" + camelToSnake(field.getName()).toUpperCase(Locale.ROOT);
+        String envVar = prefix.toUpperCase(Locale.ROOT)+ "_" + type.getName().toUpperCase(Locale.ROOT) + "_" + camelToSnake(field.getName()).toUpperCase(Locale.ROOT);
+        envVar = envVar.replace(".", "_");
+        return envVar;
     }
 
     private static String camelToSnake(String str) {

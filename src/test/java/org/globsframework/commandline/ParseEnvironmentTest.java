@@ -3,6 +3,7 @@ package org.globsframework.commandline;
 import org.globsframework.metamodel.GlobType;
 import org.globsframework.metamodel.GlobTypeLoaderFactory;
 import org.globsframework.metamodel.annotations.DefaultString;
+import org.globsframework.metamodel.annotations.FieldNameAnnotation;
 import org.globsframework.metamodel.fields.IntegerField;
 import org.globsframework.metamodel.fields.StringArrayField;
 import org.globsframework.metamodel.fields.StringField;
@@ -77,6 +78,17 @@ public class ParseEnvironmentTest {
 
     }
 
+    @Test
+    public void fieldWithPoint() throws Exception{
+        Map<String, String> env = new HashMap<>();
+        env.put("PREFIX_OPTWITHPOINT_POINT_FIELD", "test");
+
+        Glob opt = ParseEnvironment.parse("PREFIX", OptWithPoint.TYPE, env);
+
+        Assert.assertEquals("test", opt.get(OptWithPoint.withPoint));
+    }
+
+
     public static class Opt1 {
         public static GlobType TYPE;
 
@@ -130,6 +142,18 @@ public class ParseEnvironmentTest {
 
         static {
             GlobTypeLoaderFactory.create(OptWithStringArray.class, true).load();
+        }
+    }
+
+    public static class OptWithPoint {
+        public static GlobType TYPE;
+
+        public static StringField NAME;
+        @FieldNameAnnotation("point.field")
+        public static StringField withPoint;
+
+        static {
+            GlobTypeLoaderFactory.create(OptWithPoint.class, true).load();
         }
     }
 
