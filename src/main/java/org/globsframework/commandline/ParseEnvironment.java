@@ -20,9 +20,17 @@ public class ParseEnvironment {
         return parse(prefix, type, System.getenv());
     }
 
-    protected static Glob parse(String prefix, GlobType type, Map<String, String> envVars) throws EnvironmentVariableNotSetException {
+    public static Glob parseEnv(String prefix, Glob options) throws EnvironmentVariableNotSetException {
+        return parse(prefix, options.duplicate(), System.getenv());
+    }
 
+    protected static Glob parse(String prefix, GlobType type, Map<String, String> envVars) throws EnvironmentVariableNotSetException {
         MutableGlob instantiate = type.instantiate();
+        return parse(prefix, instantiate, envVars);
+    }
+
+    private static MutableGlob parse(String prefix, MutableGlob option, Map<String, String> envVars) throws EnvironmentVariableNotSetException {
+        GlobType type = option.getType();
         Field[] fields = type.getFields();
         for (Field field : fields){
             String envVar = convertToEnvVar(prefix, type, field);
@@ -30,20 +38,20 @@ public class ParseEnvironment {
             if(val != null) {
                 StringConverter.FromStringConverter converter = StringConverter.createConverter(field,
                         field.findOptAnnotation(ArraySeparator.KEY).map(glob -> glob.get(ArraySeparator.SEPARATOR)).orElse(","));
-                converter.convert(instantiate, val);
+                converter.convert(option, val);
                 LOGGER.info("Environment value " + val + " from envvar : "+ envVar + " applied to " + field.getFullName());
             }
-            if(fieldsHasNoValueAndHasADefaultValue(instantiate, field)){
-                instantiate.setValue(field, field.getDefaultValue());
+            if(fieldsHasNoValueAndHasADefaultValue(option, field)){
+                option.setValue(field, field.getDefaultValue());
                 LOGGER.info("EnvVar not found (" + envVar +") but Default value " + field.getDefaultValue() + " applied to " + field.getFullName());
-            } else if(fieldsHasNoValue(instantiate, field)) {
+            } else if(fieldsHasNoValue(option, field)) {
                 LOGGER.info("EnvVar not set (" + envVar +")");
             }
         }
 
-        checkThatMandatoryFieldsAreFilled(type, instantiate, prefix);
+        checkThatMandatoryFieldsAreFilled(type, option, prefix);
 
-        return instantiate;
+        return option;
     }
 
     private static boolean fieldsHasNoValue(MutableGlob instantiate, Field field) {

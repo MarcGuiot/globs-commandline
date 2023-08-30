@@ -52,29 +52,43 @@ public class ParseCommandLine {
         return parse(type, new ArrayList<>(Arrays.asList(line)), false);
     }
 
+    public static Glob parse(Glob option, String[] line) {
+        return parse(option, new ArrayList<>(Arrays.asList(line)), false);
+    }
+
     public static Glob parse(GlobType type, List<String> line, boolean ignoreUnknown) {
         return parse(type, line, ignoreUnknown, false);
     }
 
+    public static Glob parse(Glob option, List<String> line, boolean ignoreUnknown) {
+        return parse(option.duplicate(), line, ignoreUnknown, false);
+    }
+
     public static Glob parse(GlobType type, List<String> line, boolean ignoreUnknown, boolean stopAtFirstNotFound) {
+        final MutableGlob option = type.instantiate();
+        return parse(option, line, ignoreUnknown, stopAtFirstNotFound);
+    }
+
+    private static MutableGlob parse(MutableGlob option, List<String> line, boolean ignoreUnknown, boolean stopAtFirstNotFound) {
         LOGGER.info("parse: " + line);
         ArrayDeque<String> deque = new ArrayDeque<>(line);
         ArrayDeque<String> ignored = new ArrayDeque<>();
-        MutableGlob glob = extract(type, ignoreUnknown, stopAtFirstNotFound, deque, ignored);
+        MutableGlob glob = extract(option, ignoreUnknown, stopAtFirstNotFound, deque, ignored);
         line.clear();
         line.addAll(ignored);
         line.addAll(deque);
         return glob;
     }
 
-    private static MutableGlob extract(GlobType type, boolean ignoreUnknown, boolean stopAtFirstNotFound, Deque<String> deque, Deque<String> ignored) {
-        MutableGlob instantiate = type.instantiate();
+    private static MutableGlob extract(MutableGlob option, boolean ignoreUnknown, boolean stopAtFirstNotFound,
+                                       Deque<String> deque, Deque<String> ignored) {
+        GlobType type = option.getType();
         Field[] fields = type.getFields();
 
         Deque<Field> withoutSpecifier = Arrays.stream(fields).filter(field -> field.hasAnnotation(UnNamed.KEY))
                 .collect(Collectors.toCollection(ArrayDeque::new));
 
-        setDefaultValues(fields, instantiate);
+        setDefaultValues(fields, option);
 
         if (!deque.isEmpty()) {
             int size;
@@ -88,12 +102,12 @@ public class ParseCommandLine {
                     if (lastField != null) {
                         deque.removeFirst();
                         if (ParseUtils.fieldIsABoolean(lastField)) {
-                            instantiate.setValue(lastField, Boolean.TRUE);
+                            option.setValue(lastField, Boolean.TRUE);
                         } else {
-                            assignValueToField(lastField, deque, instantiate, param);
+                            assignValueToField(lastField, deque, option, param);
                         }
                     } else if (stopAtFirstNotFound) {
-                        return instantiate;
+                        return option;
                     } else if (!ignoreUnknown) {
                         throw new ParseError("Unknown parameter " + name);
                     }
@@ -103,13 +117,13 @@ public class ParseCommandLine {
                 } else if (lastField != null && lastField.getDataType().isArray()) {
                     StringConverter.FromStringConverter converter = StringConverter.createConverter(lastField,
                             lastField.findOptAnnotation(ArraySeparator.KEY).map(glob -> glob.get(ArraySeparator.SEPARATOR)).orElse(","));
-                    converter.convert(instantiate, param);
+                    converter.convert(option, param);
                     deque.removeFirst();
                 } else {
                     if (lastField == null) {
                         if (!withoutSpecifier.isEmpty()) {
                             Field field = withoutSpecifier.removeFirst();
-                            assignValueToField(field, deque, instantiate, param);
+                            assignValueToField(field, deque, option, param);
                             if (field instanceof StringArrayField) {
                                 lastField = field;
                             }
@@ -125,8 +139,10 @@ public class ParseCommandLine {
                             .flatMap(field -> field.getTargetTypes().stream())
                             .filter(globType -> param.equals(globType.getName()))
                             .peek(globType -> deque.removeFirst())
-                            .peek(globType -> instantiate.set(optionalUnion.get(),
-                                    extract(globType, true, true, deque, ignored)))
+                            .peek(globType -> option.set(optionalUnion.get(),
+                                    extract(option.getOptional(optionalUnion.get())
+                                            .map(Glob::duplicate)
+                                            .orElseGet(globType::instantiate), true, true, deque, ignored)))
                             .findFirst();
 
                     if (optionalUnion.isEmpty() || tType.isEmpty()) {
@@ -143,12 +159,12 @@ public class ParseCommandLine {
                         lastField = null;
                     }
                 }
-            } while (deque.size() != 0 && size != deque.size());
+            } while (!deque.isEmpty() && size != deque.size());
         }
 
-        checkMandatoryFields(type, instantiate);
-        LOGGER.info("Return : " + instantiate.toString());
-        return instantiate;
+        checkMandatoryFields(type, option);
+        LOGGER.info("Return : " + option.toString());
+        return option;
     }
 
     private static void checkMandatoryFields(GlobType type, MutableGlob instantiate) {
@@ -171,7 +187,7 @@ public class ParseCommandLine {
     private static void setDefaultValues(Field[] fields, MutableGlob instantiate) {
 
         for (Field field : fields) {
-            if (ParseUtils.fieldHasDefaultValue(field)) {
+            if (!instantiate.isSet(field) && ParseUtils.fieldHasDefaultValue(field)) {
                 instantiate.setValue(field, field.getDefaultValue());
             }
         }

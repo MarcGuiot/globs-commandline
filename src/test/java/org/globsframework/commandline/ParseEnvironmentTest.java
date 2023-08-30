@@ -83,9 +83,17 @@ public class ParseEnvironmentTest {
         Map<String, String> env = new HashMap<>();
         env.put("PREFIX_OPTWITHPOINT_POINT_FIELD", "test");
 
-        Glob opt = ParseEnvironment.parse("PREFIX", OptWithPoint.TYPE, env);
+        {
+            Glob opt = ParseEnvironment.parse("PREFIX", OptWithPoint.TYPE, env);
 
-        Assert.assertEquals("test", opt.get(OptWithPoint.withPoint));
+            Assert.assertEquals("test", opt.get(OptWithPoint.withPoint));
+        }
+
+        {
+            Glob opt = ParseCommandLine.parse(OptWithPoint.TYPE, new String[]{"--point.field", "test"});
+            Assert.assertEquals("test", opt.get(OptWithPoint.withPoint));
+        }
+
     }
 
 
@@ -149,6 +157,7 @@ public class ParseEnvironmentTest {
         public static GlobType TYPE;
 
         public static StringField NAME;
+
         @FieldNameAnnotation("point.field")
         public static StringField withPoint;
 
