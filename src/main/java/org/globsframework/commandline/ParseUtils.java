@@ -1,6 +1,6 @@
 package org.globsframework.commandline;
 
-import org.globsframework.metamodel.Field;
+import org.globsframework.metamodel.fields.Field;
 import org.globsframework.metamodel.type.DataType;
 
 public class ParseUtils {
