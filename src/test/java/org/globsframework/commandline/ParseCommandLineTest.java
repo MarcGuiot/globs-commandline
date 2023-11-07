@@ -49,9 +49,9 @@ public class ParseCommandLineTest {
     public void multipleOptions() {
         ArrayList<String> args = new ArrayList<>(Arrays.asList("--name", "a name", "--otherName", "titi"));
         Glob opt = ParseCommandLine.parse(Opt1.TYPE, args, true);
-        Assert.assertEquals(opt.get(Opt1.NAME), "a name");
+        Assert.assertEquals("a name", opt.get(Opt1.NAME));
         Glob opt2 = ParseCommandLine.parse(Opt2.TYPE, args, false);
-        Assert.assertEquals(opt2.get(Opt2.otherName), "titi");
+        Assert.assertEquals("titi", opt2.get(Opt2.otherName));
     }
 
     @Test
@@ -69,7 +69,7 @@ public class ParseCommandLineTest {
     public void WithMultiValueInArray() {
         ArrayList<String> args = new ArrayList<>(Arrays.asList("--value", "toto:ddd", "titi", "--value", "A,B,C", "--name", "a name"));
         Glob opt = ParseCommandLine.parse(Opt1.TYPE, args, false);
-        Assert.assertEquals(opt.get(Opt1.NAME), "a name");
+        Assert.assertEquals("a name", opt.get(Opt1.NAME));
         Assert.assertArrayEquals(new String[]{"toto:ddd", "titi", "A", "B", "C"}, opt.get(Opt1.MULTIVALUES));
     }
 
@@ -77,10 +77,10 @@ public class ParseCommandLineTest {
     public void WithMultiValueInArrayWithMultiOpt() {
         ArrayList<String> args = new ArrayList<>(Arrays.asList("--value", "toto", "titi", "--otherName", "tata", "--value", "A,B,C", "--name", "a name"));
         Glob opt = ParseCommandLine.parse(Opt1.TYPE, args, true);
-        Assert.assertEquals(opt.get(Opt1.NAME), "a name");
+        Assert.assertEquals("a name", opt.get(Opt1.NAME));
         Assert.assertArrayEquals(new String[]{"toto", "titi", "A", "B", "C"}, opt.get(Opt1.MULTIVALUES));
         Glob opt2 = ParseCommandLine.parse(Opt2.TYPE, args, true);
-        Assert.assertEquals(opt2.get(Opt2.otherName), "tata");
+        Assert.assertEquals("tata", opt2.get(Opt2.otherName));
     }
 
 
@@ -88,10 +88,10 @@ public class ParseCommandLineTest {
     @Ignore
     public void testWithDate() {
         Glob opt1 = ParseCommandLine.parse(ArgWithDate.TYPE, new String[]{"--dateTime", "2021-02-10T00:00:00+00"});
-        Assert.assertEquals(opt1.get(ArgWithDate.dateTime), ZonedDateTime.parse("2021-02-10T00:00:00+00"));
+        Assert.assertEquals(ZonedDateTime.parse("2021-02-10T00:00:00+00"), opt1.get(ArgWithDate.dateTime));
 
         Glob opt2 = ParseCommandLine.parse(ArgWithDate.TYPE, new String[]{"--dateTime", "2021-02-10"});
-        Assert.assertEquals(opt2.get(ArgWithDate.dateTime), ZonedDateTime.parse("2021-02-10", DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+        Assert.assertEquals(ZonedDateTime.parse("2021-02-10", DateTimeFormatter.ISO_LOCAL_DATE_TIME), opt2.get(ArgWithDate.dateTime));
 
     }
 
