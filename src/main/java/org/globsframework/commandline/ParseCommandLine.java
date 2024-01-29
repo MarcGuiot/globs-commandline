@@ -140,7 +140,7 @@ public class ParseCommandLine {
                             .filter(globType -> param.equals(globType.getName()))
                             .peek(globType -> deque.removeFirst())
                             .peek(globType -> option.set(optionalUnion.get(),
-                                    extract(option.getOptional(optionalUnion.get())
+                                    extract(option.getOpt(optionalUnion.get())
                                             .map(Glob::duplicate)
                                             .orElseGet(globType::instantiate), true, true, deque, ignored)))
                             .findFirst();
