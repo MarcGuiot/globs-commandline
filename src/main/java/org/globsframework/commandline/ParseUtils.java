@@ -1,11 +1,12 @@
 package org.globsframework.commandline;
 
-import org.globsframework.metamodel.fields.Field;
-import org.globsframework.metamodel.type.DataType;
+import org.globsframework.core.metamodel.fields.Field;
+import org.globsframework.core.metamodel.type.DataType;
 
 public class ParseUtils {
 
-    private ParseUtils() {}
+    private ParseUtils() {
+    }
 
     public static boolean fieldHasDefaultValue(Field field) {
         return field.getDefaultValue() != null;

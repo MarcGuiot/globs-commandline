@@ -1,10 +1,10 @@
 package org.globsframework.commandline;
 
-import org.globsframework.metamodel.fields.Field;
-import org.globsframework.metamodel.GlobType;
-import org.globsframework.model.Glob;
-import org.globsframework.model.MutableGlob;
-import org.globsframework.utils.StringConverter;
+import org.globsframework.core.metamodel.GlobType;
+import org.globsframework.core.metamodel.fields.Field;
+import org.globsframework.core.model.Glob;
+import org.globsframework.core.model.MutableGlob;
+import org.globsframework.core.utils.StringConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,20 +32,20 @@ public class ParseEnvironment {
     private static MutableGlob parse(String prefix, MutableGlob option, Map<String, String> envVars) throws EnvironmentVariableNotSetException {
         GlobType type = option.getType();
         Field[] fields = type.getFields();
-        for (Field field : fields){
+        for (Field field : fields) {
             String envVar = convertToEnvVar(prefix, type, field);
             String val = envVars.get(envVar);
-            if(val != null) {
+            if (val != null) {
                 StringConverter.FromStringConverter converter = StringConverter.createConverter(field,
                         field.findOptAnnotation(ArraySeparator.KEY).map(glob -> glob.get(ArraySeparator.SEPARATOR)).orElse(","));
                 converter.convert(option, val);
-                LOGGER.info("Environment value " + val + " from envvar : "+ envVar + " applied to " + field.getFullName());
+                LOGGER.info("Environment value " + val + " from envvar : " + envVar + " applied to " + field.getFullName());
             }
-            if(fieldsHasNoValueAndHasADefaultValue(option, field)){
+            if (fieldsHasNoValueAndHasADefaultValue(option, field)) {
                 option.setValue(field, field.getDefaultValue());
-                LOGGER.info("EnvVar not found (" + envVar +") but Default value " + field.getDefaultValue() + " applied to " + field.getFullName());
-            } else if(fieldsHasNoValue(option, field)) {
-                LOGGER.info("EnvVar not set (" + envVar +")");
+                LOGGER.info("EnvVar not found (" + envVar + ") but Default value " + field.getDefaultValue() + " applied to " + field.getFullName());
+            } else if (fieldsHasNoValue(option, field)) {
+                LOGGER.info("EnvVar not set (" + envVar + ")");
             }
         }
 
@@ -71,7 +71,7 @@ public class ParseEnvironment {
     }
 
     private static String convertToEnvVar(String prefix, GlobType type, Field field) {
-        String envVar = prefix.toUpperCase(Locale.ROOT)+ "_" + type.getName().toUpperCase(Locale.ROOT) + "_" + camelToSnake(field.getName()).toUpperCase(Locale.ROOT);
+        String envVar = prefix.toUpperCase(Locale.ROOT) + "_" + type.getName().toUpperCase(Locale.ROOT) + "_" + camelToSnake(field.getName()).toUpperCase(Locale.ROOT);
         envVar = envVar.replace(".", "_");
         return envVar;
     }

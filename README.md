@@ -1,12 +1,11 @@
 This library convert a command line arguments to a Glob.
-For exemple, for the command line : 
-
+For exemple, for the command line :
 
 ```
     "--value", "toto", "titi", "--otherName", "tata", "--value", "A,B,C", "--name", "a name"
 ```
 
-Using the GlobType : 
+Using the GlobType :
 
 ```    
     public static class Opt1 {
@@ -23,11 +22,14 @@ Using the GlobType :
         ...
 ```
 
-Parsed with  
+Parsed with
+
 ```
         Glob opt = ParseCommandLine.parse(Opt1.TYPE, args, true);
 ```
-Will give the glob : 
+
+Will give the glob :
+
 ```
         Assert.assertEquals("a name", opt.get(Opt1.NAME));
         Assert.assertArrayEquals(new String[]{"toto", "titi", "A", "B", "C"}, opt.get(Opt1.MULTIVALUES));

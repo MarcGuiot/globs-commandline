@@ -1,13 +1,13 @@
 package org.globsframework.commandline;
 
-import org.globsframework.metamodel.GlobType;
-import org.globsframework.metamodel.GlobTypeLoaderFactory;
-import org.globsframework.metamodel.annotations.DefaultString;
-import org.globsframework.metamodel.annotations.FieldNameAnnotation;
-import org.globsframework.metamodel.fields.IntegerField;
-import org.globsframework.metamodel.fields.StringArrayField;
-import org.globsframework.metamodel.fields.StringField;
-import org.globsframework.model.Glob;
+import org.globsframework.core.metamodel.GlobType;
+import org.globsframework.core.metamodel.GlobTypeLoaderFactory;
+import org.globsframework.core.metamodel.annotations.DefaultString;
+import org.globsframework.core.metamodel.annotations.FieldNameAnnotation;
+import org.globsframework.core.metamodel.fields.IntegerField;
+import org.globsframework.core.metamodel.fields.StringArrayField;
+import org.globsframework.core.metamodel.fields.StringField;
+import org.globsframework.core.model.Glob;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -17,7 +17,7 @@ import java.util.Map;
 public class ParseEnvironmentTest {
 
     @Test
-    public void name() throws Exception{
+    public void name() throws Exception {
         Map<String, String> env = new HashMap<>();
         env.put("PREFIX_OPT1_NAME", "a name");
         Glob opt = ParseEnvironment.parse("PREFIX", Opt1.TYPE, env);
@@ -25,28 +25,28 @@ public class ParseEnvironmentTest {
     }
 
     @Test
-    public void multipleOptions() throws Exception{
+    public void multipleOptions() throws Exception {
         Map<String, String> env = new HashMap<>();
         env.put("PREFIX_OPTMULTI_NAME", "a name");
         env.put("PREFIX_OPTMULTI_ANOTHER_NAME", "another name");
 
         Glob opt = ParseEnvironment.parse("PREFIX", OptMulti.TYPE, env);
-        Assert.assertEquals("a name", opt.get(OptMulti.NAME) );
+        Assert.assertEquals("a name", opt.get(OptMulti.NAME));
         Assert.assertEquals("another name", opt.get(OptMulti.ANOTHER_NAME));
     }
 
     @Test
-    public void testForDefaultValues() throws Exception{
+    public void testForDefaultValues() throws Exception {
         Map<String, String> env = new HashMap<>();
         env.put("PREFIX_OPTDEFAULT_NAME", "a name");
 
         Glob opt = ParseEnvironment.parse("PREFIX", OptDefault.TYPE, env);
-        Assert.assertEquals("a name", opt.get(OptDefault.NAME) );
+        Assert.assertEquals("a name", opt.get(OptDefault.NAME));
         Assert.assertEquals("Marc", opt.get(OptDefault.ANOTHER_NAME));
     }
 
     @Test
-    public void testWithIntValues() throws Exception{
+    public void testWithIntValues() throws Exception {
         Map<String, String> env = new HashMap<>();
         env.put("PREFIX_OPTWITHINTS_NAME", "a name");
         env.put("PREFIX_OPTWITHINTS_INT_FIELD", "42");
@@ -56,7 +56,7 @@ public class ParseEnvironmentTest {
     }
 
     @Test(expected = EnvironmentVariableNotSetException.class)
-    public void multipleOptionsExceptionTest() throws Exception{
+    public void multipleOptionsExceptionTest() throws Exception {
         Map<String, String> env = new HashMap<>();
         env.put("PREFIX_OPTMULTI_ANOTHER_NAME", "another name");
 
@@ -65,7 +65,7 @@ public class ParseEnvironmentTest {
     }
 
     @Test
-    public void arrayFieldTest() throws Exception{
+    public void arrayFieldTest() throws Exception {
 
         Map<String, String> env = new HashMap<>();
         env.put("PREFIX_OPTWITHSTRINGARRAY_ARRAY_FIELD", "another,name");
@@ -79,7 +79,7 @@ public class ParseEnvironmentTest {
     }
 
     @Test
-    public void fieldWithPoint() throws Exception{
+    public void fieldWithPoint() throws Exception {
         Map<String, String> env = new HashMap<>();
         env.put("PREFIX_OPTWITHPOINT_POINT_FIELD", "test");
 

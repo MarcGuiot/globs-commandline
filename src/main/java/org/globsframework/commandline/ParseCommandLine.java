@@ -1,11 +1,10 @@
 package org.globsframework.commandline;
 
-import org.globsframework.metamodel.fields.Field;
-import org.globsframework.metamodel.GlobType;
-import org.globsframework.metamodel.fields.*;
-import org.globsframework.model.Glob;
-import org.globsframework.model.MutableGlob;
-import org.globsframework.utils.StringConverter;
+import org.globsframework.core.metamodel.GlobType;
+import org.globsframework.core.metamodel.fields.*;
+import org.globsframework.core.model.Glob;
+import org.globsframework.core.model.MutableGlob;
+import org.globsframework.core.utils.StringConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -110,8 +109,7 @@ public class ParseCommandLine {
                         return option;
                     } else if (!ignoreUnknown) {
                         throw new ParseError("Unknown parameter " + name);
-                    }
-                    else {
+                    } else {
                         ignored.addLast(deque.pollFirst());
                     }
                 } else if (lastField != null && lastField.getDataType().isArray()) {
@@ -151,8 +149,7 @@ public class ParseCommandLine {
                         }
                         if (!ignoreUnknown) {
                             throw new ParseError("Unknown parameter '" + param + "'");
-                        }
-                        else {
+                        } else {
                             ignored.addLast(deque.pollFirst());
                         }
                     } else {

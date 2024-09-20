@@ -1,6 +1,6 @@
 package org.globsframework.commandline;
 
-import org.globsframework.metamodel.GlobType;
+import org.globsframework.core.metamodel.GlobType;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
