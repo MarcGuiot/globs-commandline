@@ -16,7 +16,7 @@ public class ArraySeparator {
     public static Key KEY;
 
     static {
-        GlobTypeLoaderFactory.create(ArraySeparator.class)
+        GlobTypeLoaderFactory.create(ArraySeparator.class, "ArraySeparator")
                 .register(GlobCreateFromAnnotation.class, annotation -> ArraySeparator.TYPE.instantiate()
                         .set(SEPARATOR, new String(new char[]{((ArraySeparator_) annotation).value()})))
                 .load();

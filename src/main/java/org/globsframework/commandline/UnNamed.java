@@ -18,7 +18,7 @@ public class UnNamed {
     public static Glob UNIQUE;
 
     static {
-        GlobTypeLoaderFactory.create(UnNamed.class)
+        GlobTypeLoaderFactory.create(UnNamed.class, "UnNamed")
                 .register(GlobCreateFromAnnotation.class, annotation -> UNIQUE)
                 .load();
     }

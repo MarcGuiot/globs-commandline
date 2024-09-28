@@ -2,8 +2,8 @@ package org.globsframework.commandline;
 
 import org.globsframework.core.metamodel.GlobType;
 import org.globsframework.core.metamodel.GlobTypeLoaderFactory;
-import org.globsframework.core.metamodel.annotations.DefaultInteger;
-import org.globsframework.core.metamodel.annotations.FieldNameAnnotation;
+import org.globsframework.core.metamodel.annotations.DefaultInteger_;
+import org.globsframework.core.metamodel.annotations.FieldName_;
 import org.globsframework.core.metamodel.fields.*;
 import org.globsframework.core.model.Glob;
 import org.junit.Assert;
@@ -100,11 +100,11 @@ public class ParseCommandLineTest {
 
         public static StringField NAME;
 
-        @FieldNameAnnotation("value")
+        @FieldName_("value")
         @ArraySeparator_(',')
         public static StringArrayField MULTIVALUES;
 
-        @DefaultInteger(123)
+        @DefaultInteger_(123)
         public static IntegerField VAL;
 
         static {

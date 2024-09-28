@@ -18,7 +18,7 @@ public class Mandatory {
     public static Glob UNIQUE;
 
     static {
-        GlobTypeLoaderFactory.create(Mandatory.class)
+        GlobTypeLoaderFactory.create(Mandatory.class, "Mandatory")
                 .register(GlobCreateFromAnnotation.class, annotation -> UNIQUE)
                 .load();
     }

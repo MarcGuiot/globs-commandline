@@ -2,8 +2,8 @@ package org.globsframework.commandline;
 
 import org.globsframework.core.metamodel.GlobType;
 import org.globsframework.core.metamodel.GlobTypeLoaderFactory;
-import org.globsframework.core.metamodel.annotations.DefaultString;
-import org.globsframework.core.metamodel.annotations.FieldNameAnnotation;
+import org.globsframework.core.metamodel.annotations.DefaultString_;
+import org.globsframework.core.metamodel.annotations.FieldName_;
 import org.globsframework.core.metamodel.fields.IntegerField;
 import org.globsframework.core.metamodel.fields.StringArrayField;
 import org.globsframework.core.metamodel.fields.StringField;
@@ -123,7 +123,7 @@ public class ParseEnvironmentTest {
         public static GlobType TYPE;
 
         public static StringField NAME;
-        @DefaultString("Marc")
+        @DefaultString_("Marc")
         public static StringField ANOTHER_NAME;
 
         static {
@@ -158,7 +158,7 @@ public class ParseEnvironmentTest {
 
         public static StringField NAME;
 
-        @FieldNameAnnotation("point.field")
+        @FieldName_("point.field")
         public static StringField withPoint;
 
         static {
